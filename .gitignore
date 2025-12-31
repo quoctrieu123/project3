@@ -1,0 +1,6 @@
+dataset
+legal_truncated_corpus.csv
+models
+laws_first_100k.index
+laws_first_100k.json
+.env

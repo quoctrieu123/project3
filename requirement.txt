@@ -1,0 +1,11 @@
+streamlit
+langchain-core
+langchain
+langchain-huggingface
+sentence-transformers
+transformers
+faiss-cpu
+torch
+numpy
+pypdf
+accelerate
