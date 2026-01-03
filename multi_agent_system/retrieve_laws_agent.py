@@ -34,7 +34,7 @@ def get_laws_index_and_json():
         project_root = os.path.dirname(current_dir)
         
         json_path = os.path.join(project_root, "laws_first_100k.json")
-        index_path = os.path.join(project_root, "laws_first_100k.index")
+        index_path = os.path.join(project_root, "laws_first_100k_ivfpq_v2.index")
 
         # load json
         try:
@@ -47,6 +47,7 @@ def get_laws_index_and_json():
         # load faiss index if available
         try:
             _laws_index = faiss.read_index(index_path)
+            _laws_index.nprobe = 1
         except Exception as e:
             logger.warning("Failed to read FAISS index laws_first_100k.index from %s: %s", index_path, e)
             _laws_index = None
@@ -118,3 +119,4 @@ def run_retrieve_laws_agent(state: AgentState) -> str:
     """Run the retrieve_laws_agent and return the updated state with retrieved laws context."""
     laws_context = retrieve_laws_reciprocal_ranking(state)
     return laws_context
+

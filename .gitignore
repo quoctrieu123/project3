@@ -4,3 +4,7 @@ models
 laws_first_100k.index
 laws_first_100k.json
 .env
+__pycache__/
+index/
+multi_agent_system/__pycache__
+multi_agent_system/.deepeval

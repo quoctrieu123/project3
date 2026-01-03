@@ -45,6 +45,15 @@ This folder contains the initial prototype of the project.
 *   **`extractfile.py`**: Utilities for parsing PDF/text files.
 *   **`config.py`**: Configuration settings for the single-agent system.
 
+### `index/`
+This folder contains the vector indices and metadata used for the retrieval system. It stores the pre-computed embeddings and FAISS indices for the legal documents.
+*   **`laws_first_100k.json`**: A JSON file containing the metadata or text content of the first 100k indexed legal documents.
+*   **`legal_embeddings_first_100k.npy`**: A NumPy file storing the raw embedding vectors for the documents.
+*   **`laws_first_100k_*.index`**: Various FAISS index files optimized for different retrieval strategies:
+    *   `_flatl2.index`: Exact search using L2 distance (brute-force).
+    *   `_hnsw_v1.index`: Hierarchical Navigable Small World graph index for fast approximate nearest neighbor search.
+    *   `_ivfpq*.index`: Inverted File with Product Quantization indices for memory-efficient retrieval.
+
 ### Root Directory
 *   **`classifier_based_path_classifier_training.py`**: The training script for the Router's classification model.
 *   **`create_laws_100k_index.ipynb`**: Notebook for creating the vector index of legal documents (FAISS/Chroma).
