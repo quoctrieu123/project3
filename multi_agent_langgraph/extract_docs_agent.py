@@ -1,4 +1,9 @@
 import os
+import sys
+
+# Add the project root to sys.path to allow importing from single_agent_system and other modules
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 import warnings
 warnings.filterwarnings("ignore")
 os.environ["TF_ENABLE_ONEDNN_OPTS"] = "0"
@@ -7,11 +12,11 @@ from langchain_core.messages import HumanMessage
 from pypdf import PdfReader
 import numpy as np
 import re
-from config import PATH_TO_EMBEDDING
+from single_agent_system.config import PATH_TO_EMBEDDING
 import faiss
 from sentence_transformers import SentenceTransformer
 import logging
-from multi_agent import AgentState
+from multi_agent_langgraph.multi_agent import AgentState
 
 _embedder = None
 _laws_index = None

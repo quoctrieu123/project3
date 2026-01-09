@@ -1,6 +1,6 @@
-dataset
-legal_truncated_corpus.csv
 models
-laws_first_100k.index
-laws_first_100k.json
+dataset/laws_first_100k_hnsw_v1.index
+dataset/laws_first_100k.json
 .env
+__pycache__/dataset/laws_100K.json
+dataset/laws_100K.json

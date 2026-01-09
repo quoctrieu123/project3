@@ -21,26 +21,12 @@ def run_generate_subqueries_agent(state: AgentState) -> list:
         subqueries (list): The list of generated sub-queries.
     """
     system_message_content = """
-    Bạn là một trợ lý luật sư thông minh. Nhiệm vụ của bạn là phân tích câu hỏi của khách hàng và ĐẶT LẠI VẤN ĐỀ dưới 5 góc độ pháp lý khác nhau để tra cứu luật.
+    Bạn là một trợ lý luật sư thông minh. Nhiệm vụ của bạn là phân tích câu hỏi của người dùng và tạo ra năm (5) câu hỏi phụ (sub-queries) liên quan đến các khía cạnh khác nhau của câu hỏi gốc. Mục đích của việc tạo các câu hỏi phụ này là để tìm kiếm thông tin pháp luật liên quan một cách hiệu quả hơn.
 
     YÊU CẦU BẮT BUỘC:
-    1. KHÔNG được viết lại câu hỏi gốc (Paraphrase).
-    2. Phải tách câu hỏi thành các khía cạnh nhỏ hơn (Decomposition).
-    3. Mỗi câu hỏi con phải tập trung vào một từ khóa pháp lý riêng biệt, ví dụ:
-    - Câu 1: Hỏi về "Điều kiện" / "Đối tượng áp dụng".
-    - Câu 2: Hỏi về "Hồ sơ" / "Giấy tờ cần thiết".
-    - Câu 3: Hỏi về "Trình tự" / "Thủ tục thực hiện".
-    - Câu 4: Hỏi về "Thẩm quyền" / "Cơ quan giải quyết".
-    - Câu 5: Hỏi về "Thời hạn" / "Chi phí" / "Chế tài xử phạt".
-
+    1. Nếu câu hỏi gốc đã rất cụ thể, hãy trả lời năm câu hỏi phụ Y HỆT NHƯ CÂU HỎI GỐC.
+    2. Nếu câu hỏi gốc rộng hoặc mơ hồ, hãy chia nó thành năm câu hỏi phụ cụ thể hơn, mỗi câu hỏi tập trung vào một khía cạnh khác nhau của chủ đề.
     Ví dụ:
-    Query: "Mở quán karaoke cần gì?"
-    Sub-queries Tốt:
-    1. Điều kiện cấp giấy phép kinh doanh dịch vụ karaoke?
-    2. Hồ sơ đề nghị cấp giấy phép đủ điều kiện an ninh trật tự cho quán karaoke?
-    3. Quy định về phòng cháy chữa cháy đối với cơ sở kinh doanh karaoke?
-    4. Lệ phí cấp giấy phép kinh doanh karaoke là bao nhiêu?
-    5. Cơ quan nào có thẩm quyền cấp phép kinh doanh karaoke?
     """
     system_prompt = SystemMessage(content = system_message_content)
     last_message = state.get("messages", [])[-1]

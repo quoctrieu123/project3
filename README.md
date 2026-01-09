@@ -1,10 +1,10 @@
 # Project: Legal Multi-Agent System
 
-This project aims to build a robust multi-agent system for legal question answering and document analysis. It leverages a graph-based architecture to route queries, retrieve relevant legal information, and process user-uploaded documents.
+This project aims to build a robust multi-agent system for legal question answering and document analysis under the course Project 3 with Associate Professor Pham Van Hai at Hanoi University of Science and Technology.
 
 ## 1. General Architecture
 
-The system is built using **LangGraph** to orchestrate a workflow of specialized agents. The architecture follows a state-machine approach where a shared state (`AgentState`) is passed between nodes (agents).
+![System Architecture](images/system_archi_drawio.png)
 
 ### Workflow Overview:
 1.  **Router Agent**: The entry point. It uses a trained PyTorch model (`PathClassifier`) to classify the user's query into one of two paths:
@@ -37,7 +37,7 @@ This folder contains the core logic for the advanced multi-agent implementation.
 *   **`agent_evaluation.ipynb` & `router_evaluation.py`**: Tools for evaluating the performance of the agents and the router.
 
 ### `single_agent_system/`
-This folder contains the initial prototype of the project.
+This folder contains the single agent prototype of the project.
 *   **`app.py`**: A Streamlit web application serving as the user interface for the single-agent version.
 *   **`agent.py`**: The implementation of the single monolithic agent.
 *   **`ChatbotLuatPhap.ipynb`**: A notebook for testing and prototyping the chatbot logic.
@@ -47,20 +47,51 @@ This folder contains the initial prototype of the project.
 
 ### Root Directory
 *   **`classifier_based_path_classifier_training.py`**: The training script for the Router's classification model.
-*   **`create_laws_100k_index.ipynb`**: Notebook for creating the vector index of legal documents (FAISS/Chroma).
-*   **`models/`**: Stores trained models, such as `path_classifier_model.pth`.
-*   **`dataset/`**: Contains the dataset used for training the classifier.
+*   **`create_laws_100k_index.ipynb`**: Script for creating the vector index of 100000 laws.
+*   **`models/`**: Stores trained router neural network model.
+*   **`dataset/`**: Contains the dataset used for training the classifier, the hsnw index and corresponding data for laws.
+*  **`requirements.txt`**: Lists the Python dependencies for the project.
+*  **`uploaded_files/`**: Directory for storing user-uploaded files to the system (currently contains two sample documents).
 
 ## 3. Development Strategy
 
-The project followed an iterative development strategy:
+The project followed an development strategy with two main phases:
 
 1.  **Single-Agent System (Phase 1)**:
     *   Initially, I deployed a **Single-Agent System** (located in `single_agent_system/`).
-    *   This version served as a Proof of Concept (PoC) to validate the basic RAG (Retrieval-Augmented Generation) pipeline and user interface using Streamlit.
-    *   It handled all tasks (retrieval, generation, context management) within a single agentic flow.
+    *   This version is used validate the basic RAG (Retrieval-Augmented Generation) pipeline and user interface using Streamlit.
 
 2.  **Multi-Agent System (Phase 2)**:
     *   To improve accuracy, scalability, and handling of complex queries, I transitioned the project to a **Multi-Agent System** (located in `multi_agent_system/`).
     *   This architecture decomposes the problem into specialized sub-tasks (Routing, Retrieval, Reasoning, Verification).
     *   This transition allows for better control over the logic flow, more precise retrieval strategies (via sub-queries), and the ability to handle different types of requests (General Law vs. Specific Documents) more effectively.
+
+## 4. How to Run
+
+### Prerequisites
+- Python 3.10 or higher
+- A Google Gemini API Key
+
+### Step 1: Install Dependencies
+Open a terminal in the project root (`projectcode`) and run:
+```bash
+pip install -r requirement.txt
+```
+
+### Step 2: Setup Data Files
+The system requires specific data files for retrieval which are too large for to upload to Github.
+1.  Download the `laws_first_100k_hnsw_v1.index` and `laws_first_100k.json` files from the provided Google Drive link [here](https://drive.google.com/drive/folders/14o4xibysP3LD35WDEtTgpditDcz1ewI4?usp=sharing).
+2.  Place both files inside the **`dataset/`** folder.
+
+### Step 3: Setup Environment Variables
+1.  Create a new file named **`.env`** in the root directory (`projectcode/`).
+2.  Add your Google API Key to the file:
+    ```env
+    GOOGLE_API_KEY=your_api_key_here
+    ```
+
+### Step 4: Run the System
+To start the multi-agent system, run the following command from the root directory:
+```bash
+python multi_agent_langgraph/multi_agent.py
+```

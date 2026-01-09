@@ -28,11 +28,18 @@ class AgentState(TypedDict):
     generated_subqueries: List[str]
 
 
-load_dotenv(r"C:\Users\Admin\Downloads\Project code\.env")
+# Setup path for .env file relative to the script location
+current_dir = os.path.dirname(os.path.abspath(__file__))
+project_root = os.path.dirname(current_dir)
+env_path = os.path.join(project_root, ".env")
+load_dotenv(env_path)
+
 llm = ChatGoogleGenerativeAI(model = "gemini-2.5-flash", temperature = 0.2)
 
 def setup(state: AgentState) -> AgentState:
     """Initialize the agent state"""
+    print("======================== System Message ==========================")
+    print(f" Hệ thống đã sẵn sàng, hiện ghi nhận {len(state.get('uploaded_files', []))} file được tải lên.")
     ai_message = AIMessage(content= "Chào bạn! Tôi là trợ lý AI, tôi sẵn sàng trả lời các câu hỏi của bạn về luật pháp hoặc tài liệu bạn cung cấp.")
     ai_message.pretty_print()
     print("======================== Human Message ==========================")
@@ -48,7 +55,7 @@ def router_agent(state: AgentState) -> str:
     print("======================== Router Agent ==========================")
     route = run_router_agent(state)
     b = time.time()
-    print(f"Router agent took {b - a:.2f} seconds.")
+    #print(f"Router agent took {b - a:.2f} seconds.")
     return {"route": route}
 
 def route_path(state: AgentState) -> str:
@@ -80,7 +87,7 @@ def generate_subqueries_agent(state: AgentState) -> AgentState:
     print("Generated Sub-queries:")
     for i, sub_query in enumerate(sub_queries):
         print(f"- Sub-query {i+1}: {sub_query}")
-    print(f"Generate subqueries agent took {b - a:.2f} seconds.")
+    #print(f"Generate subqueries agent took {b - a:.2f} seconds.")
     return {"generated_subqueries": sub_queries}
 
 def retrieve_laws_agent(state: AgentState) -> AgentState:
@@ -91,7 +98,7 @@ def retrieve_laws_agent(state: AgentState) -> AgentState:
     laws_content = run_retrieve_laws_agent(state)
     print("Retrieved laws context sucessfully.")
     b = time.time()
-    print(f"Retrieve laws agent took {b - a:.2f} seconds.")
+    #print(f"Retrieve laws agent took {b - a:.2f} seconds.")
     return {"laws_context": laws_content}
 
 def laws_agent(state: AgentState) -> AgentState:
@@ -102,7 +109,7 @@ def laws_agent(state: AgentState) -> AgentState:
     response = run_laws_agent(state)
     b = time.time()
     print(response.content)
-    print(f"Laws agent took {b - a:.2f} seconds.")
+    #print(f"Laws agent took {b - a:.2f} seconds.")
     return {"messages": [response]}
 
 def extract_docs_agent(state: AgentState) -> AgentState:
@@ -113,7 +120,7 @@ def extract_docs_agent(state: AgentState) -> AgentState:
     docs_context = run_docs_agent(state)
     b = time.time()
     print("Extracted documents context successfully.")
-    print(f"Extract documents agent took {b - a:.2f} seconds.")
+    #print(f"Extract documents agent took {b - a:.2f} seconds.")
     return {"docs_context": docs_context}
 
 def documents_agent(state: AgentState) -> AgentState:
@@ -124,7 +131,7 @@ def documents_agent(state: AgentState) -> AgentState:
     response = run_document_agent(state)
     b = time.time()
     print(response.content)
-    print(f"Documents agent took {b - a:.2f} seconds.")
+    #print(f"Documents agent took {b - a:.2f} seconds.")
     return {"messages": [response]}
 
 def verifier_agent(state: AgentState) -> AgentState:
@@ -132,11 +139,14 @@ def verifier_agent(state: AgentState) -> AgentState:
     a = time.time()
     from multi_agent_langgraph.verifier_agent import run_verifier_agent
     print("======================== Verifier Agent ==========================")
-    final_answer, explaination = run_verifier_agent(state)
+    fact_check, relevance_check, clarity_check, policy_check = run_verifier_agent(state)
     b = time.time()
-    print("Kết quả verfier:", explaination)
-    print(f"Verifier agent took {b - a:.2f} seconds.")
-    return {"messages": [AIMessage(content=final_answer)]}
+    print("Verification Results:")
+    print(f"- Fact Check: {fact_check}")
+    print(f"- Relevance Check: {relevance_check}")
+    print(f"- Clarity Check: {clarity_check}")
+    print(f"- Policy Check: {policy_check}")
+    return {}
 
 def reasoning_agent(state: AgentState) -> AgentState:
     """ Run the reasoning agent to generate a detailed explaination about the process of generating answer for the user's query """
@@ -146,7 +156,7 @@ def reasoning_agent(state: AgentState) -> AgentState:
     reasoning = run_reasoning_agent(state)
     b = time.time()
     print(reasoning)
-    print(f"Reasoning agent took {b - a:.2f} seconds.")
+    #print(f"Reasoning agent took {b - a:.2f} seconds.")
     return {}
 
 def human_response(state: AgentState) -> AgentState:
@@ -210,12 +220,19 @@ graph.add_conditional_edges(source = "human_response", path = should_continue, p
 })
 app = graph.compile()
 
-def run_multi_agent_system(uploaded_files: list = []) -> AgentState:
+def run_multi_agent_system() -> AgentState:
     """
     Run the multi-agent system graph.
     Args:
         uploaded_files (list): List of uploaded file paths (if any)
     """
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    project_root = os.path.dirname(current_dir)
+    tartget_folder = os.path.join(project_root, "uploaded_files")
+    uploaded_files = []
+    for filename in os.listdir(tartget_folder):
+        file_path =  os.path.join(tartget_folder, filename)
+        uploaded_files.append(file_path)
     initial_state: AgentState = {
         "messages": [],
         "docs_context": "",
@@ -228,4 +245,4 @@ def run_multi_agent_system(uploaded_files: list = []) -> AgentState:
     return state
 
 if __name__ == "__main__":
-    run_multi_agent_system(uploaded_files=[r"C:\Users\Admin\Downloads\Project code\Cristiano Ronaldo.pdf"])
+    run_multi_agent_system()
