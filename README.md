@@ -1,4 +1,4 @@
-# Project: Legal Multi-Agent System
+# Project: Laws & General Documents Multi-Agent Based System
 
 This project aims to build a robust multi-agent system for legal question answering and document analysis under the course Project 3 with Associate Professor Pham Van Hai at Hanoi University of Science and Technology.
 
