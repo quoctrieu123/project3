@@ -15,8 +15,8 @@ This project aims to build a robust multi-agent system for legal question answer
     *   **Retrieve Laws Agent**: Uses the sub-queries to fetch relevant legal contexts from a vector database.
     *   **Laws Agent**: Synthesizes the retrieved legal information to answer the user's question.
     *   **Documents Agent**: Processes and answers questions based on the context of uploaded documents (e.g., PDFs).
-    *   **Verifier Agent**: (Optional/In-progress) Validates the generated answers for accuracy.
-    *   **Reasoning Agent**: (Optional/In-progress) Provides logical reasoning steps for complex deductions.
+    *   **Verifier Agent**: Validates the generated answers for accuracy.
+    *   **Reasoning Agent**: Provides logical reasoning steps for complex deductions.
 
 The system uses **Google Gemini** (via `ChatGoogleGenerativeAI`) as the underlying LLM for generation and reasoning.
 
@@ -87,7 +87,7 @@ The system requires specific data files for retrieval which are too large for to
 1.  Create a new file named **`.env`** in the root directory (`projectcode/`).
 2.  Add your Google API Key to the file:
     ```env
-    GOOGLE_API_KEY=your_api_key_here
+    GOOGLE_API_KEY=your_api_key
     ```
 
 ### Step 4: Run the System
