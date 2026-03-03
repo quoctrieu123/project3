@@ -1,6 +1,6 @@
 # Project: Laws & General Documents Multi-Agent Based System
 
-This project aims to build a robust multi-agent system for legal question answering and document analysis under the course Project 3 with Associate Professor Pham Van Hai at Hanoi University of Science and Technology.
+This project aims to build a robust multi-agent system for legal question answering and document analysis.
 
 ## 1. General Architecture
 
@@ -95,3 +95,4 @@ To start the multi-agent system, run the following command from the root directo
 ```bash
 python multi_agent_langgraph/multi_agent.py
 ```
+
