@@ -2,6 +2,7 @@ import os
 import sys
 from pathlib import Path
 from dotenv import load_dotenv
+from scipy import io
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 load_dotenv(PROJECT_ROOT / ".env")
@@ -38,7 +39,8 @@ from .config import (
     QDRANT_LEGAL_COLLECTION,
 )
 
-class AgentState(TypedDict):
+class AgentState(TypedDict, total=False):
+    """Graph state; each node may return only the fields it updates."""
     messages: Annotated[List[BaseMessage], add_messages]
     docs_context: str
     laws_context: str
@@ -99,14 +101,13 @@ def route_path(state: AgentState) -> str:
         str: The path to take ("documents" or "extract_laws").
     """
     route = state.get("route", "")
-    if route not in ["documents", "extract_laws"]:
-        raise ValueError(f"route_path: Invalid route '{route}'")
     if route == "documents":
         print("Routing to documents agent.")
         return "documents"
     elif route == "extract_laws":
         print("Routing to extract laws agent.")
         return "extract_laws"
+    raise ValueError(f"route_path: Invalid route '{route}'")
     
 
 def generate_subqueries_agent(state: AgentState) -> AgentState:
@@ -216,7 +217,7 @@ def should_continue(state: AgentState) -> str:
     last_message = messages[-1]
     if not isinstance(last_message, HumanMessage):
         raise ValueError("should_continue: last message is not a HumanMessage")
-    user_input = last_message.content.lower()
+    user_input = extract_text_content(last_message.content).strip().lower()
     if user_input == "exit" or user_input == "quit":
         print("======================== System Message ==========================")
         print("Conversation ended.")
@@ -264,8 +265,9 @@ def run_multi_agent_system(
     Args:
         uploaded_files (list): List of uploaded file paths (if any)
     """
+    import io
     for stream in (sys.stdout, sys.stderr):
-        if hasattr(stream, "reconfigure"):
+        if isinstance(stream, io.TextIOWrapper):
             stream.reconfigure(encoding="utf-8")
 
     session_id = str(uuid.uuid4())

@@ -21,6 +21,8 @@ def run_router_agent(state: AgentState) -> str:
     last_message = messages[-1]
     if not isinstance(last_message, HumanMessage):
         raise ValueError("run_router_agent: last message is not a HumanMessage")
+    if not isinstance(last_message.content, str):
+        raise ValueError("run_router_agent: last message content is not a string")
     query = last_message.content.lower()
     law_keywords = ["luật", "điều", "mức phạt", "theo pháp luật", "quốc hội", "hành vi", "nghị định", "thông tư"]
     documents_keywords = ["văn bản", "tài liệu", "file", "đoạn văn", "bài viết"]

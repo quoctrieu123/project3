@@ -21,7 +21,7 @@ llm_subquery = llm.with_structured_output(SubQueryModel)
     process_inputs=trace_agent_state_inputs,
     process_outputs=trace_subquery_outputs,
 )
-def run_generate_subqueries_agent(state: AgentState) -> list:
+def run_generate_subqueries_agent(state: AgentState) -> list[str]:
     """
     Generate sub-queries from the main query for retrieval purposes.
     Args:
@@ -38,19 +38,25 @@ def run_generate_subqueries_agent(state: AgentState) -> list:
     Ví dụ:
     """
     system_prompt = SystemMessage(content = system_message_content)
-    last_message = state.get("messages", [])[-1]
+    messages = state.get("messages", [])
+    if not messages:
+        raise ValueError("sub_queries_agent: messages list is empty")
+
+    last_message = messages[-1]
     if not isinstance(last_message, HumanMessage):
         raise ValueError("sub_queries_agent: last message is not a HumanMessage")
-    all_message = [system_prompt, last_message]
-    response = llm_subquery.invoke(all_message)
-    try: 
-        subqueries = [
-            last_message.content,
-            response.sub_query_1,
-            response.sub_query_2,
-            response.sub_query_3,
-            response.sub_query_4,
-            response.sub_query_5]
-    except Exception as e:
-        raise ValueError(f"sub_queries_agent: Error extracting sub-queries - {e}")
-    return subqueries
+    if not isinstance(last_message.content, str):
+        raise ValueError("sub_queries_agent: user query must be plain text")
+
+    response = llm_subquery.invoke([system_prompt, last_message])
+    if not isinstance(response, SubQueryModel):
+        raise ValueError("sub_queries_agent: invalid structured model response")
+
+    return [
+        last_message.content,
+        response.sub_query_1,
+        response.sub_query_2,
+        response.sub_query_3,
+        response.sub_query_4,
+        response.sub_query_5,
+    ]

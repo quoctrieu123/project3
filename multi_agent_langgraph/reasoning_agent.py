@@ -58,4 +58,6 @@ def run_reasoning_agent(state: AgentState) -> str:
     user_message = HumanMessage(content= "Hãy tạo ra một giải thích chi tiết về quá trình suy luận để tạo ra câu trả lời cuối cùng.")
     all_messages = [system_message, user_message]
     response = llm.invoke(all_messages)
+    if not isinstance(response.content,str):
+        raise ValueError("run_reasoning_agent: LLM response content is not a string")
     return response.content

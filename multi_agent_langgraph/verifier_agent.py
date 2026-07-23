@@ -1,6 +1,6 @@
 from langchain_core.messages import AIMessage, HumanMessage, SystemMessage # Import SystemMessage
 from pydantic import BaseModel
-from multi_agent import llm, AgentState
+from .multi_agent import llm, AgentState
 
 class VerifierModle(BaseModel):
     fact_check: str
@@ -10,7 +10,7 @@ class VerifierModle(BaseModel):
 
 llm_verifier = llm.with_structured_output(VerifierModle)
 
-def run_verifier_agent(state: AgentState) -> tuple:
+def run_verifier_agent(state: AgentState) -> tuple[str,str,str,str]:
     """ 
     Run the verifier agent to verify the answers provided by the other agents
     """
@@ -59,7 +59,8 @@ def run_verifier_agent(state: AgentState) -> tuple:
     all_messages = [system_message, trigger_message]
     
     response = llm_verifier.invoke(all_messages)
-    
+    if not isinstance(response, VerifierModle):
+        raise ValueError("run_verifier_agent: LLM response is not of type VerifierModle")
     fact_check = response.fact_check
     relevance_check = response.relevance_check
     clarity_check = response.clarity_check
