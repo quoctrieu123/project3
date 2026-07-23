@@ -21,9 +21,10 @@ os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
 os.environ["ACCELERATE_DISABLE_LOGGING"] = "1"
 
 
-from typing import TypedDict, Annotated, List
+from typing import Annotated, List, TypedDict, cast
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.messages import BaseMessage, HumanMessage, AIMessage
+from langchain_core.runnables import RunnableConfig
 from langgraph.graph import StateGraph, START, END
 from langgraph.graph.message import add_messages
 import time
@@ -47,7 +48,6 @@ class AgentState(TypedDict):
     session_id: str
 
 
-<<<<<<< HEAD:multi_agent_system/multi_agent.py
 llm = ChatGoogleGenerativeAI(
     model=GOOGLE_GENERATIVE_MODEL,
     temperature=GOOGLE_GENERATIVE_TEMPERATURE,
@@ -55,27 +55,18 @@ llm = ChatGoogleGenerativeAI(
 
 
 def extract_text_content(content: object) -> str:
-    """Return only user-visible text and discard model thinking blocks."""
+    """Return the text portion of a model response."""
     if isinstance(content, str):
         return content.strip()
     if isinstance(content, list):
         text_parts: list[str] = []
         for block in content:
-            if isinstance(block, dict) and block.get("type") == "text":
+            if isinstance(block, dict):
                 text = block.get("text")
                 if isinstance(text, str) and text.strip():
                     text_parts.append(text.strip())
         return "\n\n".join(text_parts)
     return ""
-=======
-# Setup path for .env file relative to the script location
-current_dir = os.path.dirname(os.path.abspath(__file__))
-project_root = os.path.dirname(current_dir)
-env_path = os.path.join(project_root, ".env")
-load_dotenv(env_path)
-
-llm = ChatGoogleGenerativeAI(model = "gemini-2.5-flash", temperature = 0.2)
->>>>>>> d04d76698cd41bf38741665b5a9a466d01239e30:multi_agent_langgraph/multi_agent.py
 
 def setup(state: AgentState) -> AgentState:
     """Initialize the agent state"""
@@ -89,7 +80,7 @@ def setup(state: AgentState) -> AgentState:
     return {"messages": [ai_message, user_message]}
 
 
-def router_agent(state: AgentState) -> str:
+def router_agent(state: AgentState) -> dict[str, str]:
     """ Route the query to the appropriate agent based on the content of the query """
     a = time.time()
     from .router_agent import run_router_agent
@@ -152,14 +143,8 @@ def laws_agent(state: AgentState) -> AgentState:
     if not answer_text:
         raise ValueError("Laws agent returned no user-visible text")
     b = time.time()
-<<<<<<< HEAD:multi_agent_system/multi_agent.py
     print(f"Laws agent took {b - a:.2f} seconds.")
     return {"messages": [AIMessage(content=answer_text)]}
-=======
-    print(response.content)
-    #print(f"Laws agent took {b - a:.2f} seconds.")
-    return {"messages": [response]}
->>>>>>> d04d76698cd41bf38741665b5a9a466d01239e30:multi_agent_langgraph/multi_agent.py
 
 def extract_docs_agent(state: AgentState) -> AgentState:
     """Extract docs context related to the query from the uploaded files"""
@@ -182,14 +167,8 @@ def documents_agent(state: AgentState) -> AgentState:
     if not answer_text:
         raise ValueError("Documents agent returned no user-visible text")
     b = time.time()
-<<<<<<< HEAD:multi_agent_system/multi_agent.py
     print(f"Documents agent took {b - a:.2f} seconds.")
     return {"messages": [AIMessage(content=answer_text)]}
-=======
-    print(response.content)
-    #print(f"Documents agent took {b - a:.2f} seconds.")
-    return {"messages": [response]}
->>>>>>> d04d76698cd41bf38741665b5a9a466d01239e30:multi_agent_langgraph/multi_agent.py
 
 def verifier_agent(state: AgentState) -> AgentState:
     """ Run the verifier agent to verify the answers provided by the other agents """
@@ -198,18 +177,12 @@ def verifier_agent(state: AgentState) -> AgentState:
     print("======================== Verifier Agent ==========================")
     fact_check, relevance_check, clarity_check, policy_check = run_verifier_agent(state)
     b = time.time()
-<<<<<<< HEAD:multi_agent_system/multi_agent.py
-    print(final_answer)
-    print(f"Verifier agent took {b - a:.2f} seconds.")
-    return {"messages": [AIMessage(content=final_answer)]}
-=======
     print("Verification Results:")
     print(f"- Fact Check: {fact_check}")
     print(f"- Relevance Check: {relevance_check}")
     print(f"- Clarity Check: {clarity_check}")
     print(f"- Policy Check: {policy_check}")
     return {}
->>>>>>> d04d76698cd41bf38741665b5a9a466d01239e30:multi_agent_langgraph/multi_agent.py
 
 def reasoning_agent(state: AgentState) -> AgentState:
     """ Run the reasoning agent to generate a detailed explaination about the process of generating answer for the user's query """
@@ -281,35 +254,28 @@ graph.add_conditional_edges(source = "human_response", path = should_continue, p
 })
 app = graph.compile()
 
-<<<<<<< HEAD:multi_agent_system/multi_agent.py
 def run_multi_agent_system(
-    uploaded_files: list | None = None,
+    uploaded_files: list[str] | None = None,
     *,
     cleanup_documents: bool = True,
 ) -> AgentState:
-=======
-def run_multi_agent_system() -> AgentState:
->>>>>>> d04d76698cd41bf38741665b5a9a466d01239e30:multi_agent_langgraph/multi_agent.py
     """
     Run the multi-agent system graph.
     Args:
         uploaded_files (list): List of uploaded file paths (if any)
     """
-<<<<<<< HEAD:multi_agent_system/multi_agent.py
     for stream in (sys.stdout, sys.stderr):
         if hasattr(stream, "reconfigure"):
             stream.reconfigure(encoding="utf-8")
 
     session_id = str(uuid.uuid4())
-=======
-    current_dir = os.path.dirname(os.path.abspath(__file__))
-    project_root = os.path.dirname(current_dir)
-    tartget_folder = os.path.join(project_root, "uploaded_files")
-    uploaded_files = []
-    for filename in os.listdir(tartget_folder):
-        file_path =  os.path.join(tartget_folder, filename)
-        uploaded_files.append(file_path)
->>>>>>> d04d76698cd41bf38741665b5a9a466d01239e30:multi_agent_langgraph/multi_agent.py
+    if uploaded_files is None:
+        target_folder = PROJECT_ROOT / "uploaded_files"
+        uploaded_files = (
+            [str(path) for path in target_folder.iterdir() if path.is_file()]
+            if target_folder.is_dir()
+            else []
+        )
     initial_state: AgentState = {
         "messages": [],
         "docs_context": "",
@@ -319,29 +285,24 @@ def run_multi_agent_system() -> AgentState:
         "generated_subqueries": [],
         "session_id": session_id,
     }
+    config: RunnableConfig = {
+        "recursion_limit": 1000,
+        "run_name": "legal-chat-session",
+        "tags": ["legal-chatbot", "multi-agent", "qdrant", "local"],
+        "metadata": {
+            "session_id": session_id,
+            "environment": "development",
+            "llm_model": GOOGLE_GENERATIVE_MODEL,
+            "embedding_model": PATH_TO_EMBEDDING,
+            "legal_collection": QDRANT_LEGAL_COLLECTION,
+            "document_collection": QDRANT_DOCUMENT_COLLECTION,
+            "uploaded_file_count": len(uploaded_files or []),
+        },
+    }
+
     try:
-        return app.invoke(
-            initial_state,
-            config={
-                "recursion_limit": 1000,
-                "run_name": "legal-chat-session",
-                "tags": [
-                    "legal-chatbot",
-                    "multi-agent",
-                    "qdrant",
-                    "local",
-                ],
-                "metadata": {
-                    "session_id": session_id,
-                    "environment": "development",
-                    "llm_model": GOOGLE_GENERATIVE_MODEL,
-                    "embedding_model": PATH_TO_EMBEDDING,
-                    "legal_collection": QDRANT_LEGAL_COLLECTION,
-                    "document_collection": QDRANT_DOCUMENT_COLLECTION,
-                    "uploaded_file_count": len(uploaded_files or []),
-                },
-            },
-        )
+        result = app.invoke(initial_state, config=config)
+        return cast(AgentState, result)
     finally:
         if cleanup_documents:
             from .document_store import cleanup_session_documents
@@ -349,12 +310,4 @@ def run_multi_agent_system() -> AgentState:
             cleanup_session_documents(session_id)
 
 if __name__ == "__main__":
-<<<<<<< HEAD:multi_agent_system/multi_agent.py
-    run_multi_agent_system(
-        uploaded_files=[
-            r"C:\Users\Admin\Downloads\Project 3\Project code\pdf files\Cristiano Ronaldo.pdf"
-        ]
-    )
-=======
     run_multi_agent_system()
->>>>>>> d04d76698cd41bf38741665b5a9a466d01239e30:multi_agent_langgraph/multi_agent.py
