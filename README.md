@@ -1,13 +1,6 @@
 # Project: Laws & General Documents Multi-Agent Based System
 
-<<<<<<< HEAD
-py -3.12 -m multi_agent_system.multi_agent
-
-
-This project aims to build a robust multi-agent system for legal question answering and document analysis. It leverages a graph-based architecture to route queries, retrieve relevant legal information, and process user-uploaded documents.
-=======
 This project aims to build a robust multi-agent system for legal question answering and document analysis.
->>>>>>> d04d76698cd41bf38741665b5a9a466d01239e30
 
 ## 1. General Architecture
 
