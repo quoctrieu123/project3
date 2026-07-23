@@ -1,5 +1,8 @@
 # Project: Legal Multi-Agent System
 
+py -3.12 -m multi_agent_system.multi_agent
+
+
 This project aims to build a robust multi-agent system for legal question answering and document analysis. It leverages a graph-based architecture to route queries, retrieve relevant legal information, and process user-uploaded documents.
 
 ## 1. General Architecture

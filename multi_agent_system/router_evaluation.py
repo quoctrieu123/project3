@@ -1,7 +1,7 @@
-from router_agent import run_router_agent
+from .router_agent import run_router_agent
 import pandas as pd
 import time as time
-from multi_agent import AgentState
+from .multi_agent import AgentState
 from langchain_core.messages import HumanMessage
 sentences = pd.read_csv(".\dataset\dataset_for_router_embedding_similarity.csv")
 sentences = sentences["query"][:2000].tolist()

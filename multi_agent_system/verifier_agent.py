@@ -1,6 +1,8 @@
-from langchain_core.messages import AIMessage, HumanMessage
+from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
 from pydantic import BaseModel
-from multi_agent import llm, AgentState
+from langsmith import traceable
+from .multi_agent import llm, AgentState
+from .tracing import trace_agent_state_inputs, trace_verifier_outputs
 
 class VerifierModle(BaseModel):
     final_answer: str
@@ -8,6 +10,13 @@ class VerifierModle(BaseModel):
 
 llm_verifier = llm.with_structured_output(VerifierModle)
 
+@traceable(
+    name="verify-final-answer",
+    run_type="chain",
+    tags=["verifier", "final-answer"],
+    process_inputs=trace_agent_state_inputs,
+    process_outputs=trace_verifier_outputs,
+)
 def run_verifier_agent(state: AgentState) -> tuple:
     """ 
     Run the verifier agent to verify the answers provided by the other agents
@@ -47,11 +56,12 @@ def run_verifier_agent(state: AgentState) -> tuple:
     - Nếu nguồn dữ liệu không chứa thống tin câu hỏi: Thông báo rằng không thể trả lời câu hỏi dựa trên ngữ cảnh đã cho.
 
     KẾT QUẢ CẦN TRẢ VỀ:
-    - Final Answer: câu trả lời cuối cùng
-    - Explanation: giải thích ngắn gọn về quá trình kiểm định và lý do tại sao câu trả lời cuối cùng là chính xác hoặc đã được sửa đổi.
+    - Final Answer: câu trả lời cuối cùng bằng tiếng Việt.
+    - Explanation: giải thích ngắn gọn bằng tiếng Việt về quá trình kiểm định và lý do tại sao câu trả lời cuối cùng là chính xác hoặc đã được sửa đổi.
+    - Không đưa quá trình suy luận nội bộ vào Final Answer.
     """
     )
-    system_message = AIMessage(content= system_prompt)
+    system_message = SystemMessage(content=system_prompt)
     messages = state.get("messages",[])
     all_messages = [system_message] + messages
     response = llm_verifier.invoke(all_messages)

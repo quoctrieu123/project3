@@ -1,7 +1,9 @@
-from multi_agent import AgentState
+from .multi_agent import AgentState, llm
 from langchain_core.messages import SystemMessage, HumanMessage
-from multi_agent import llm
 from pydantic import BaseModel
+from langsmith import traceable
+
+from .tracing import trace_agent_state_inputs, trace_subquery_outputs
 
 class SubQueryModel(BaseModel):
     sub_query_1: str
@@ -12,6 +14,13 @@ class SubQueryModel(BaseModel):
 
 llm_subquery = llm.with_structured_output(SubQueryModel)
 
+@traceable(
+    name="generate-legal-subqueries",
+    run_type="chain",
+    tags=["legal", "subqueries"],
+    process_inputs=trace_agent_state_inputs,
+    process_outputs=trace_subquery_outputs,
+)
 def run_generate_subqueries_agent(state: AgentState) -> list:
     """
     Generate sub-queries from the main query for retrieval purposes.

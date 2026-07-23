@@ -1,0 +1,18 @@
+services:
+  qdrant: # tên service
+    image: qdrant/qdrant:latest # image của container qdrant
+    container_name: legal-qdrant # tên container
+    restart: unless-stopped # tự động khởi động lại. Chỉ không khởi động khi dùng docker stop
+
+    ports:
+      - "127.0.0.1:6333:6333" # ánh xạ cổng 6333 của máy chủ với cổng 6333 của container, cổng 6333 là cổng HTTP REST API và web dashboard
+
+      - "127.0.0.1:6334:6334" # ánh xạ cổng 6334 của máy chủ với cổng 6334 của container, cổng 6334 là cổng cho gRPC API
+    
+    volumes:
+      - qdrant_storage:/qdrant/storage # gắn docker volume qdrant_storage vào thư mục /qdrant/storage của container để lưu trữ dữ liệu  
+
+volumes:
+  qdrant_storage:
+    name: legal-qdrant-storage # đặt tên cho volume qdrant_storage là legal-qdrant-storage
+  

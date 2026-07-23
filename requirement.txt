@@ -9,3 +9,5 @@ torch
 numpy
 pypdf
 accelerate
+qdrant-client
+langsmith

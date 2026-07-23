@@ -1,5 +1,5 @@
 from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
-from multi_agent import llm, AgentState
+from .multi_agent import llm, AgentState
 
 def run_reasoning_agent(state: AgentState) -> str:
     """

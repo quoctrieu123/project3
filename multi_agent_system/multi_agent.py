@@ -1,6 +1,16 @@
-import sys
 import os
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+import sys
+from pathlib import Path
+from dotenv import load_dotenv
+
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+load_dotenv(PROJECT_ROOT / ".env")
+
+# During development, expose trace inputs and outputs so the complete pipeline
+# can be inspected in LangSmith. Production can opt back into masking by setting
+# both values to "true" in .env.
+os.environ.setdefault("LANGSMITH_HIDE_INPUTS", "false")
+os.environ.setdefault("LANGSMITH_HIDE_OUTPUTS", "false")
 
 import warnings
 warnings.filterwarnings("ignore")
@@ -11,13 +21,21 @@ os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
 os.environ["ACCELERATE_DISABLE_LOGGING"] = "1"
 
 
-from typing import TypedDict, Sequence, Annotated, List
-from dotenv import load_dotenv
+from typing import TypedDict, Annotated, List
 from langchain_google_genai import ChatGoogleGenerativeAI
-from langchain_core.messages import BaseMessage, HumanMessage, AIMessage, SystemMessage
+from langchain_core.messages import BaseMessage, HumanMessage, AIMessage
 from langgraph.graph import StateGraph, START, END
 from langgraph.graph.message import add_messages
 import time
+import uuid
+
+from .config import (
+    GOOGLE_GENERATIVE_MODEL,
+    GOOGLE_GENERATIVE_TEMPERATURE,
+    PATH_TO_EMBEDDING,
+    QDRANT_DOCUMENT_COLLECTION,
+    QDRANT_LEGAL_COLLECTION,
+)
 
 class AgentState(TypedDict):
     messages: Annotated[List[BaseMessage], add_messages]
@@ -26,10 +44,28 @@ class AgentState(TypedDict):
     uploaded_files: List[str]
     route: str
     generated_subqueries: List[str]
+    session_id: str
 
 
-load_dotenv(r"C:\Users\Admin\Downloads\Project code\.env")
-llm = ChatGoogleGenerativeAI(model = "gemini-2.5-flash", temperature = 0.2)
+llm = ChatGoogleGenerativeAI(
+    model=GOOGLE_GENERATIVE_MODEL,
+    temperature=GOOGLE_GENERATIVE_TEMPERATURE,
+)
+
+
+def extract_text_content(content: object) -> str:
+    """Return only user-visible text and discard model thinking blocks."""
+    if isinstance(content, str):
+        return content.strip()
+    if isinstance(content, list):
+        text_parts: list[str] = []
+        for block in content:
+            if isinstance(block, dict) and block.get("type") == "text":
+                text = block.get("text")
+                if isinstance(text, str) and text.strip():
+                    text_parts.append(text.strip())
+        return "\n\n".join(text_parts)
+    return ""
 
 def setup(state: AgentState) -> AgentState:
     """Initialize the agent state"""
@@ -44,7 +80,7 @@ def setup(state: AgentState) -> AgentState:
 def router_agent(state: AgentState) -> str:
     """ Route the query to the appropriate agent based on the content of the query """
     a = time.time()
-    from multi_agent_langgraph.router_agent import run_router_agent
+    from .router_agent import run_router_agent
     print("======================== Router Agent ==========================")
     route = run_router_agent(state)
     b = time.time()
@@ -73,7 +109,7 @@ def route_path(state: AgentState) -> str:
 def generate_subqueries_agent(state: AgentState) -> AgentState:
     """Generate sub-queries from the main query for retrieval purposes."""
     a = time.time()
-    from multi_agent_langgraph.generate_subqueries_agent import run_generate_subqueries_agent
+    from .generate_subqueries_agent import run_generate_subqueries_agent
     print("======================== Generate Subqueries Agent ==========================")
     sub_queries = run_generate_subqueries_agent(state)
     b = time.time()
@@ -86,7 +122,7 @@ def generate_subqueries_agent(state: AgentState) -> AgentState:
 def retrieve_laws_agent(state: AgentState) -> AgentState:
     """Retrieve laws context based on the generated sub-queries."""
     a = time.time()
-    from multi_agent_langgraph.retrieve_laws_agent import run_retrieve_laws_agent
+    from .retrieve_laws_agent import run_retrieve_laws_agent
     print("======================== Retrieve Laws Agent ==========================")
     laws_content = run_retrieve_laws_agent(state)
     print("Retrieved laws context sucessfully.")
@@ -97,18 +133,20 @@ def retrieve_laws_agent(state: AgentState) -> AgentState:
 def laws_agent(state: AgentState) -> AgentState:
     """Process the laws context and generate a response to the user's query."""
     a = time.time()
-    from multi_agent_langgraph.laws_agent import run_laws_agent
+    from .laws_agent import run_laws_agent
     print("======================== Laws Agent ==========================")
     response = run_laws_agent(state)
+    answer_text = extract_text_content(response.content)
+    if not answer_text:
+        raise ValueError("Laws agent returned no user-visible text")
     b = time.time()
-    print(response.content)
     print(f"Laws agent took {b - a:.2f} seconds.")
-    return {"messages": [response]}
+    return {"messages": [AIMessage(content=answer_text)]}
 
 def extract_docs_agent(state: AgentState) -> AgentState:
     """Extract docs context related to the query from the uploaded files"""
     a = time.time()
-    from multi_agent_langgraph.extract_docs_agent import run_docs_agent
+    from .extract_docs_agent import run_docs_agent
     print("======================== Extract Documents Agent ==========================")
     docs_context = run_docs_agent(state)
     b = time.time()
@@ -119,29 +157,31 @@ def extract_docs_agent(state: AgentState) -> AgentState:
 def documents_agent(state: AgentState) -> AgentState:
     """Generate a response to the user's query based on the extracted documents context."""
     a = time.time()
-    from multi_agent_langgraph.documens_agent import run_document_agent
+    from .documens_agent import run_document_agent
     print("======================== Documents Agent ==========================")
     response = run_document_agent(state)
+    answer_text = extract_text_content(response.content)
+    if not answer_text:
+        raise ValueError("Documents agent returned no user-visible text")
     b = time.time()
-    print(response.content)
     print(f"Documents agent took {b - a:.2f} seconds.")
-    return {"messages": [response]}
+    return {"messages": [AIMessage(content=answer_text)]}
 
 def verifier_agent(state: AgentState) -> AgentState:
     """ Run the verifier agent to verify the answers provided by the other agents """
     a = time.time()
-    from multi_agent_langgraph.verifier_agent import run_verifier_agent
+    from .verifier_agent import run_verifier_agent
     print("======================== Verifier Agent ==========================")
     final_answer, explaination = run_verifier_agent(state)
     b = time.time()
-    print("Kết quả verfier:", explaination)
+    print(final_answer)
     print(f"Verifier agent took {b - a:.2f} seconds.")
     return {"messages": [AIMessage(content=final_answer)]}
 
 def reasoning_agent(state: AgentState) -> AgentState:
     """ Run the reasoning agent to generate a detailed explaination about the process of generating answer for the user's query """
     a = time.time()
-    from multi_agent_langgraph.reasoning_agent import run_reasoning_agent
+    from .reasoning_agent import run_reasoning_agent
     print("======================== Reasoning Agent ==========================")
     reasoning = run_reasoning_agent(state)
     b = time.time()
@@ -188,7 +228,6 @@ graph.add_node(node = "generate_subqueries_agent", action = generate_subqueries_
 graph.add_node(node = "retrieve_laws_agent", action = retrieve_laws_agent)
 graph.add_node(node = "laws_agent", action = laws_agent)
 graph.add_node(node = "verifier_agent", action = verifier_agent)
-graph.add_node(node = "reasoning_agent", action = reasoning_agent)
 graph.add_node(node = "human_response", action = human_response)
 graph.add_edge(START, "setup")
 graph.add_edge("setup", "router_agent")
@@ -201,8 +240,7 @@ graph.add_edge("generate_subqueries_agent", "retrieve_laws_agent")
 graph.add_edge("retrieve_laws_agent", "laws_agent")
 graph.add_edge("documents_agent", "verifier_agent")
 graph.add_edge("laws_agent", "verifier_agent")
-graph.add_edge("verifier_agent", "reasoning_agent")
-graph.add_edge("reasoning_agent", "human_response")
+graph.add_edge("verifier_agent", "human_response")
 
 graph.add_conditional_edges(source = "human_response", path = should_continue, path_map = {
     "continue": "router_agent",
@@ -210,22 +248,62 @@ graph.add_conditional_edges(source = "human_response", path = should_continue, p
 })
 app = graph.compile()
 
-def run_multi_agent_system(uploaded_files: list = []) -> AgentState:
+def run_multi_agent_system(
+    uploaded_files: list | None = None,
+    *,
+    cleanup_documents: bool = True,
+) -> AgentState:
     """
     Run the multi-agent system graph.
     Args:
         uploaded_files (list): List of uploaded file paths (if any)
     """
+    for stream in (sys.stdout, sys.stderr):
+        if hasattr(stream, "reconfigure"):
+            stream.reconfigure(encoding="utf-8")
+
+    session_id = str(uuid.uuid4())
     initial_state: AgentState = {
         "messages": [],
         "docs_context": "",
         "laws_context": "",
-        "uploaded_files": uploaded_files,
+        "uploaded_files": uploaded_files or [],
         "route": "",
-        "generated_subqueries": []
+        "generated_subqueries": [],
+        "session_id": session_id,
     }
-    state = app.invoke(initial_state, config = {"recursion_limit": 1000})
-    return state
+    try:
+        return app.invoke(
+            initial_state,
+            config={
+                "recursion_limit": 1000,
+                "run_name": "legal-chat-session",
+                "tags": [
+                    "legal-chatbot",
+                    "multi-agent",
+                    "qdrant",
+                    "local",
+                ],
+                "metadata": {
+                    "session_id": session_id,
+                    "environment": "development",
+                    "llm_model": GOOGLE_GENERATIVE_MODEL,
+                    "embedding_model": PATH_TO_EMBEDDING,
+                    "legal_collection": QDRANT_LEGAL_COLLECTION,
+                    "document_collection": QDRANT_DOCUMENT_COLLECTION,
+                    "uploaded_file_count": len(uploaded_files or []),
+                },
+            },
+        )
+    finally:
+        if cleanup_documents:
+            from .document_store import cleanup_session_documents
+
+            cleanup_session_documents(session_id)
 
 if __name__ == "__main__":
-    run_multi_agent_system(uploaded_files=[r"C:\Users\Admin\Downloads\Project code\Cristiano Ronaldo.pdf"])
+    run_multi_agent_system(
+        uploaded_files=[
+            r"C:\Users\Admin\Downloads\Project 3\Project code\pdf files\Cristiano Ronaldo.pdf"
+        ]
+    )

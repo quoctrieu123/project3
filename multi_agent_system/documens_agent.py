@@ -1,4 +1,4 @@
-from multi_agent import AgentState
+from .multi_agent import AgentState, llm
 from langchain_core.messages import AIMessage, SystemMessage
 
 def run_document_agent(state: AgentState) -> AIMessage:
@@ -9,11 +9,9 @@ def run_document_agent(state: AgentState) -> AIMessage:
     Returns:
         response (AIMessage): The response from the document agent.
     """
-    from multi_agent import llm
     docs_context = state.get("docs_context", "")
     if not docs_context:
         raise ValueError("run_document_agent: docs_context is empty")
-    """Run the agent that answers based on retrieved document context"""
     system_message_content = f"""
     Bạn là một trợ lý AI chỉ được phép dựa trên văn bản cung cấp (context). TUYỆT ĐỐI không thêm kiến thức ngoài.
     Chế độ trả lời câu hỏi:

@@ -1,4 +1,4 @@
-from multi_agent import AgentState
+from .multi_agent import AgentState, llm
 from langchain_core.messages import AIMessage, SystemMessage
 def run_laws_agent(state: AgentState) -> AIMessage:
     """
@@ -28,6 +28,5 @@ def run_laws_agent(state: AgentState) -> AIMessage:
     messages = state.get("messages", [])
     system_message = SystemMessage(content = system_message_content)
     all_messages = [system_message] + messages
-    from multi_agent import llm
     response = llm.invoke(all_messages)
     return response
