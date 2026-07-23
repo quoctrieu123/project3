@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 streamlit
 langchain-core
 langchain
@@ -11,3 +12,24 @@ pypdf
 accelerate
 qdrant-client
 langsmith
+=======
+accelerate
+bitsandbytes
+faiss-cpu
+langchain
+langchain-core
+langchain-google-genai
+langchain-huggingface
+langgraph
+nltk
+numpy
+pandas
+pypdf
+python-dotenv
+rank_bm25
+scikit-learn
+sentence-transformers
+streamlit
+torch
+transformers
+>>>>>>> d04d76698cd41bf38741665b5a9a466d01239e30

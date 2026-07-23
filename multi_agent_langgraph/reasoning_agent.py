@@ -43,14 +43,15 @@ def run_reasoning_agent(state: AgentState) -> str:
     - router_agent: Xác định con đường phù hợp dựa trên truy vấn của người dùng (trả lời dựa trên tài liệu hoặc dữ liệu luật), sinh ra route.
     - extract_docs_agent: Trích xuất các thông tin liên quan từ kho tài liệu dựa trên truy vấn của người dùng, sinh ra ngữ cảnh.
     - documents_agent: Tạo câu trả lời dựa trên các thông tin đã trích xuất, sinh ra câu trả lời cuối cùng.
-    - generate_subqueries_agent: Tạo các truy vấn phụ từ truy vấn chính để tìm kiếm thông tin luật pháp liên quan, sinh ra các truy vấn phụ. 
-    - retrieve_laws_agent: Tìm kiếm và thu thập các điều luật liên quan trên dữ liệu luật dựa trên các truy vấn phụ, sinh ra ngữ cảnh.
+    - generate_subqueries_agent: Tạo các truy vấn phụ từ truy vấn chính để tìm kiếm thông tin luật pháp liên quan, sinh ra các truy vấn phụ (nếu truy vấn chính đã đủ cụ thể, các truy vấn phụ sẽ giống y hệt truy vấn chính).
+    - retrieve_laws_agent: Tìm kiếm và thu thập các điều luật liên quan trên dữ liệu luật dựa trên các truy vấn phụ, sinh ra ngữ cảnh sử dụng hybrid search là bm25 và faiss
     - laws_agent: Tạo câu trả lời dựa trên các điều luật đã thu thập, sinh ra câu trả lời cuối cùng.
 
-    YÊU CẦU GIẢI THÍCH QUÁ TRÌNH SUY LUẬN:
+    YÊU CẦU GIẢI THÍCH QUÁ TRÌNH SUY LUẬN: 
     - Phần 1: Mô tả tổng quan về quá trình suy luận: vai trò tác nhân, cách thông tin ngữ cảnh được dùng để tạo câu trả lời.
     - Phần 2: Giải thích trình bày các bước sinh ra câu trả lời một cách rõ ràng và logic
     - Trình bày giải thích trên dưới dạng đoạn văn mạch lạc.
+    Lưu ý: Đối với các câu hỏi hướng đến lịch sử hội thoại, câu trả lời sinh ra có thể dựa trên lịch sử hội thoại mà không cần dựa trên ngữ cảnh được cung cấp.
     """
     )
     system_message = SystemMessage(content= system_prompt)

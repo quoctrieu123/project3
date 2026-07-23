@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 dataset
 legal_truncated_corpus.csv
 models
@@ -8,3 +9,10 @@ __pycache__/
 index/
 multi_agent_system/__pycache__
 multi_agent_system/.deepeval
+=======
+dataset/laws_first_100k_hnsw_v1.index
+dataset/laws_first_100k.json
+.env
+__pycache__/dataset/laws_100K.json
+dataset/laws_100K.json
+>>>>>>> d04d76698cd41bf38741665b5a9a466d01239e30

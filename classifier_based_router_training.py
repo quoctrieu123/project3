@@ -58,7 +58,10 @@ def train_model(model, x_train, y_train, x_test, y_test, epochs=20, learning_rat
 if __name__ == "__main__":
     # Training entrypoint. This block runs only when the file is executed directly.
     # It was purposely moved out of top-level import to avoid heavy processing on import.
-    data  = pd.read_csv("dataset/dataset_for_path_classifier_training.csv")
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    dataset_path = os.path.join(current_dir, "dataset", "dataset_for_path_classifier_training.csv")
+    
+    data  = pd.read_csv(dataset_path)
     data  = data.sample(frac=1, random_state = 7).reset_index(drop=True)
 
     data["embedding"] = data["query"].apply(embedding_sentence)
@@ -74,4 +77,6 @@ if __name__ == "__main__":
 
     model = PathClassifier()
     train_model(model, x_train, y_train, x_test, y_test, epochs=20, learning_rate=0.0001)
-    torch.save(model.state_dict(), "path_classifier_model.pth")
+    
+    model_save_path = os.path.join(current_dir, "models", "path_classifier_model.pth")
+    torch.save(model.state_dict(), model_save_path)
